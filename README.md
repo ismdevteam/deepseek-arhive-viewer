@@ -33,7 +33,7 @@ Works with **100+ MB files** – virtual scrolling, full‑text search, conversa
 
 ### 2. Download the viewer
 
-Save the HTML file from the [latest release](https://github.com/yourusername/deepseek-archive-viewer/releases) (or clone the repo) – just one file: `deepseek-archive-viewer.html`
+Save the HTML file from the [latest release](https://github.com/ismdevteam/deepseek-archive-viewer) (or clone the repo) – just one file: `deepseek-archive-viewer.html`
 
 ### 3. Open the viewer
 
