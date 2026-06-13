@@ -3,6 +3,8 @@
 A powerful, self-contained HTML/JS viewer for DeepSeek chat exports (`conversations.json`).  
 Works with **100+ MB files** – virtual scrolling, full‑text search, conversation/message navigation, copy to clipboard, and auto‑load of previously used file.
 
+**🔗 Live Demo:** [ismdevteam.github.io/deepseek-arhive-viewer/](https://ismdevteam.github.io/deepseek-arhive-viewer/)
+
 <img width="1327" height="940" alt="DeepSeek Archive Viewer Screenshot" src="https://github.com/user-attachments/assets/809f8aa3-6661-4a2a-9bc9-02eb59a76a90" />
 
 ## Features
@@ -31,16 +33,20 @@ Works with **100+ MB files** – virtual scrolling, full‑text search, conversa
 3. Under **Data** (or **Privacy**), choose **Export data** / **Download conversations**
 4. You will receive a `conversations.json` file (it can be >100 MB)
 
-### 2. Download the viewer
+### 2. Use the viewer
 
-Save the HTML file from the [latest release](https://github.com/ismdevteam/deepseek-archive-viewer) (or clone the repo) – just one file: `deepseek-archive-viewer.html`
+You have two options:
 
-### 3. Open the viewer
+#### Option A: Use the hosted version (recommended)
+Simply open: **[https://ismdevteam.github.io/deepseek-arhive-viewer/](https://ismdevteam.github.io/deepseek-arhive-viewer/)**  
+No download needed – works directly in your browser!
 
-Double‑click the HTML file, or open it with your browser:  
-`File → Open File → deepseek-archive-viewer.html`
+#### Option B: Run locally
+1. Download `deepseek-arhive-viewer.html` from the [repository](https://github.com/ismdevteam/deepseek-arhive-viewer)
+2. Double‑click the HTML file, or open it with your browser:  
+   `File → Open File → deepseek-arhive-viewer.html`
 
-### 4. Load your export
+### 3. Load your export
 
 Click **📂 Load conversations.json** and select the file you downloaded.  
 The viewer will parse it (takes a few seconds for large files) and show all conversations.
