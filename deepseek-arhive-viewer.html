@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek Archive Viewer v1.07</title>
+    <title>DeepSeek Archive Viewer v1.08</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -458,6 +458,90 @@
             50% { filter: brightness(1.3); transform: scale(1.01); }
             100% { filter: brightness(1); transform: scale(1); }
         }
+        /* Editing UI */
+        .save-btn {
+            background: #2c2c2c;
+            padding: 0.4rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid #3a3a3a;
+            color: #e4e4e7;
+            white-space: nowrap;
+        }
+        .save-btn:hover:not(:disabled) {
+            background: #3a3a3a;
+            border-color: #10a37f;
+        }
+        .save-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .modified-flag { color: #f59e0b; font-weight: 600; }
+        .msg-actions {
+            display: flex;
+            gap: 0.4rem;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .message:hover .msg-actions { opacity: 1; }
+        .msg-action-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #e4e4e7;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .msg-action-btn:hover { background: #3a3a3a; border-color: #10a37f; }
+        .msg-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+        .edit-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: #1a1a1a;
+            border: 1px solid #10a37f;
+            border-radius: 12px;
+            color: #e4e4e7;
+            padding: 0.7rem 1rem;
+            font-family: 'Segoe UI', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+        .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+        .edit-save-btn, .edit-cancel-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #e4e4e7;
+            padding: 0.3rem 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .edit-save-btn:hover { border-color: #10a37f; background: #1e2a24; }
+        .edit-cancel-btn:hover { border-color: #ef4444; }
+        .conv-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .conv-item:hover .conv-actions { opacity: 1; }
+        .conv-action-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #9ca3af;
+            padding: 0.1rem 0.35rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+        .conv-action-btn:hover { background: #3a3a3a; border-color: #10a37f; color: #e4e4e7; }
+        .conv-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
         .empty-state, .loading {
             display: flex;
             align-items: center;
@@ -489,13 +573,15 @@
 <div class="app">
     <div class="toolbar">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: auto;">
-            <h1>💬 DeepSeek Archive Viewer v1.07</h1>
+            <h1>💬 DeepSeek Archive Viewer v1.08</h1>
             <button class="help-btn" id="helpButton" title="How to use">?</button>
         </div>
         <label class="file-label">
             📂 Load conversations.json
             <input type="file" id="jsonFileInput" accept=".json">
         </label>
+        <button class="save-btn" id="saveBtn" title="Save changes to file (Ctrl+S)" disabled>💾 Save</button>
+        <button class="save-btn" id="saveAsBtn" title="Save to a new file (Ctrl+Shift+S)" disabled>💾 Save As</button>
         <input type="text" id="globalSearchInput" class="global-search-box" placeholder="🔍 Search across ALL conversations...">
         <div id="stats" class="stats">No file loaded</div>
     </div>
@@ -564,6 +650,8 @@
                     <li><strong>Message navigation</strong> – use the <strong>Top / Prev / Next / Bottom</strong> buttons or arrow keys (↑ ↓).</li>
                     <li><strong>Copy message</strong> – click “📋 Copy Msg” to copy the currently visible message. “📚 Copy All” copies the whole conversation.</li>
                     <li><strong>Bookmarkable URLs</strong> – the URL updates with <code>?conversation=5&message=12</code> so you can share or reload exact positions.</li>
+                    <li><strong>Editing</strong> – hover a message and click <strong>✏️ Edit</strong> to modify its text, or <strong>🗑 Delete</strong> to remove it. Hover a conversation in the left list to rename (✏️) or delete (🗑) it.</li>
+                    <li><strong>Saving</strong> – after editing, use <strong>💾 Save</strong> (Ctrl+S) to write back to the same file, or <strong>💾 Save As</strong> (Ctrl+Shift+S) to save to a new file. A <span style="color:#f59e0b;">● modified</span> badge in the top bar shows unsaved changes.</li>
                 </ul>
             </li>
         </ol>
@@ -582,7 +670,7 @@
     // CUSTOMIZABLE SCROLL OFFSET
     // ============================================================
     const SCROLL_OFFSET_PX = 128;  // DO NOT CHANGE - works perfectly!
-    const VERSION = "v1.07";
+    const VERSION = "v1.08";
     // ============================================================
     
     // IndexedDB setup
@@ -649,6 +737,8 @@
     const chatSearchNextBtn = document.getElementById('chatSearchNextBtn');
     const chatSearchStats = document.getElementById('chatSearchStats');
     const chatSearchClearBtn = document.getElementById('chatSearchClearBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const saveAsBtn = document.getElementById('saveAsBtn');
     
     // Modal elements
     const helpButton = document.getElementById('helpButton');
@@ -674,6 +764,13 @@
     let chatSearchCurrentMatch = -1;
     let searchDebounceTimer = null;
 
+    // Editing / saving state
+    let loadedRoot = null;       // original parsed JSON root (kept for export)
+    let loadedListKey = null;    // null => root itself is the array; else key like 'conversations'
+    let loadedFileName = 'conversations.json';
+    let dirty = false;
+    let saveFileHandle = null;
+
     // ---------- Data extraction (same as before) ----------
     function extractMessagesFromMapping(mapping) {
         if (!mapping || typeof mapping !== 'object') return [];
@@ -690,7 +787,7 @@
                 for (const frag of node.message.fragments) {
                     if (frag.type === 'REQUEST' || frag.type === 'RESPONSE') {
                         const role = (frag.type === 'REQUEST') ? 'user' : 'assistant';
-                        messages.push({ role: role, content: frag.content || '' });
+                        messages.push({ role: role, content: frag.content || '', frag: frag, node: node });
                     }
                 }
             }
@@ -734,7 +831,8 @@
                 id, title, preview, date: dateStr,
                 messages: messages,
                 originalIndex: idx,
-                searchText: buildSearchableText({title, messages})
+                searchText: buildSearchableText({title, messages}),
+                source: conv
             };
         });
     }
@@ -817,10 +915,27 @@
                 <div class="message ${msg.role === 'user' ? 'user' : 'assistant'}" data-msg-idx="${idx}">
                     <div class="message-role" data-msg-num="${messageNumber}">#${messageNumber} ${roleLabel}</div>
                     <div class="message-content">${displayContent}</div>
+                    <div class="msg-actions">
+                        <button class="msg-action-btn" data-edit-idx="${idx}">✏️ Edit</button>
+                        <button class="msg-action-btn danger" data-del-idx="${idx}">🗑 Delete</button>
+                    </div>
                 </div>
             `;
         }).join('');
         messagesContainer.innerHTML = html;
+
+        document.querySelectorAll('[data-edit-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                startEditMessage(parseInt(btn.getAttribute('data-edit-idx'), 10));
+            });
+        });
+        document.querySelectorAll('[data-del-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteMessage(parseInt(btn.getAttribute('data-del-idx'), 10));
+            });
+        });
         
         document.querySelectorAll('.message-role').forEach(el => {
             el.addEventListener('click', (e) => {
@@ -1034,6 +1149,201 @@
         }
     }
 
+    // ---------- Editing & saving ----------
+    function getSelectedConv() {
+        return filteredConversations.find(c => c.id === selectedConvId) || rawConversations.find(c => c.id === selectedConvId) || null;
+    }
+
+    function markDirty() {
+        dirty = true;
+        saveBtn.disabled = false;
+        updateStats();
+    }
+
+    function refreshConvDerived(conv) {
+        conv.preview = conv.messages.length ? conv.messages[conv.messages.length - 1].content.substring(0, 90) : "No messages";
+        conv.searchText = buildSearchableText(conv);
+    }
+
+    function startEditMessage(idx) {
+        const msg = currentMessages[idx];
+        const msgElem = document.querySelector(`.message[data-msg-idx="${idx}"]`);
+        if (!msg || !msgElem || msgElem.querySelector('.edit-textarea')) return;
+        const contentDiv = msgElem.querySelector('.message-content');
+        const actionsDiv = msgElem.querySelector('.msg-actions');
+        contentDiv.style.display = 'none';
+        actionsDiv.style.display = 'none';
+        const ta = document.createElement('textarea');
+        ta.className = 'edit-textarea';
+        ta.value = msg.content;
+        const editActions = document.createElement('div');
+        editActions.className = 'edit-actions';
+        const saveEditBtn = document.createElement('button');
+        saveEditBtn.className = 'edit-save-btn';
+        saveEditBtn.textContent = '✓ Apply';
+        const cancelEditBtn = document.createElement('button');
+        cancelEditBtn.className = 'edit-cancel-btn';
+        cancelEditBtn.textContent = '✕ Cancel';
+        editActions.appendChild(saveEditBtn);
+        editActions.appendChild(cancelEditBtn);
+        msgElem.appendChild(ta);
+        msgElem.appendChild(editActions);
+        ta.focus();
+        saveEditBtn.addEventListener('click', () => {
+            const newContent = ta.value;
+            msg.content = newContent;
+            if (msg.frag) msg.frag.content = newContent;
+            const conv = getSelectedConv();
+            if (conv) refreshConvDerived(conv);
+            markDirty();
+            renderMessagesWithHighlight();
+            renderVisibleItems();
+            if (chatSearchQuery) performSearch(chatSearchQuery);
+        });
+        cancelEditBtn.addEventListener('click', () => {
+            renderMessagesWithHighlight();
+        });
+    }
+
+    function removeNodeIfEmpty(mapping, node) {
+        if (!mapping || !node) return;
+        if (node.message && Array.isArray(node.message.fragments) && node.message.fragments.length > 0) return;
+        if (node.children && node.children.length > 0) return; // keep tree structure intact
+        for (const [id, n] of Object.entries(mapping)) {
+            if (n === node) {
+                const parentId = node.parent;
+                if (parentId && mapping[parentId] && Array.isArray(mapping[parentId].children)) {
+                    mapping[parentId].children = mapping[parentId].children.filter(c => c !== id);
+                }
+                delete mapping[id];
+                break;
+            }
+        }
+    }
+
+    function deleteMessage(idx) {
+        const msg = currentMessages[idx];
+        const conv = getSelectedConv();
+        if (!msg || !conv) return;
+        const snippet = msg.content.length > 80 ? msg.content.substring(0, 80) + '…' : msg.content;
+        if (!confirm(`Delete message #${idx + 1} (${msg.role})?\n\n"${snippet}"`)) return;
+        if (msg.node && msg.node.message && Array.isArray(msg.node.message.fragments) && msg.frag) {
+            const fi = msg.node.message.fragments.indexOf(msg.frag);
+            if (fi >= 0) msg.node.message.fragments.splice(fi, 1);
+            if (conv.source && conv.source.mapping) removeNodeIfEmpty(conv.source.mapping, msg.node);
+        }
+        conv.messages.splice(idx, 1);
+        refreshConvDerived(conv);
+        markDirty();
+        if (currentMsgIndex >= conv.messages.length) currentMsgIndex = conv.messages.length - 1;
+        renderMessagesWithHighlight();
+        renderVisibleItems();
+        updateNavButtons();
+        if (chatSearchQuery) performSearch(chatSearchQuery);
+        updateUrlWithParams(conv.originalIndex + 1, Math.max(0, currentMsgIndex));
+    }
+
+    function renameConversation(convId) {
+        const conv = rawConversations.find(c => c.id === convId);
+        if (!conv) return;
+        const newTitle = prompt('New conversation title:', conv.title);
+        if (newTitle === null) return;
+        const trimmed = newTitle.trim() || 'New Chat';
+        conv.title = trimmed;
+        if (conv.source) conv.source.title = trimmed;
+        refreshConvDerived(conv);
+        markDirty();
+        renderVisibleItems();
+        if (selectedConvId === convId) {
+            selectedConvTitleSpan.innerHTML = `#${conv.originalIndex + 1} — ${escapeHtml(conv.title)}`;
+        }
+    }
+
+    function deleteConversation(convId) {
+        const conv = rawConversations.find(c => c.id === convId);
+        if (!conv) return;
+        if (!confirm(`Delete conversation "${conv.title}" with ${conv.messages.length} message(s)?`)) return;
+        if (conv.source) conv.source._deleted = true;
+        rawConversations = rawConversations.filter(c => c !== conv);
+        reversedConversations = createReversedList(rawConversations);
+        markDirty();
+        if (selectedConvId === convId) {
+            selectedConvId = null;
+            currentMessages = [];
+            currentMsgIndex = -1;
+            selectedConvTitleSpan.innerText = "Select a conversation";
+            messagesContainer.innerHTML = '<div class="empty-state">← Pick a conversation to view</div>';
+            clearChatSearch();
+            updateNavButtons();
+            updateUrlWithParams(null, -1);
+        }
+        applyGlobalSearchFilter();
+    }
+
+    function buildExportJSON() {
+        if (!loadedRoot) return null;
+        if (loadedListKey) {
+            loadedRoot[loadedListKey] = loadedRoot[loadedListKey].filter(c => !c._deleted);
+        } else if (Array.isArray(loadedRoot)) {
+            loadedRoot = loadedRoot.filter(c => !c._deleted);
+        }
+        return JSON.stringify(loadedRoot);
+    }
+
+    async function saveFile(saveAs) {
+        if (!loadedRoot) return;
+        const json = buildExportJSON();
+        if (json === null) return;
+        if (window.showSaveFilePicker) {
+            try {
+                if (saveAs || !saveFileHandle) {
+                    saveFileHandle = await showSaveFilePicker({
+                        suggestedName: loadedFileName,
+                        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+                    });
+                    loadedFileName = saveFileHandle.name || loadedFileName;
+                }
+                const writable = await saveFileHandle.createWritable();
+                await writable.write(json);
+                await writable.close();
+            } catch (err) {
+                if (err && err.name === 'AbortError') return;
+                console.warn('File System Access save failed, falling back to download:', err);
+                if (!downloadJSON(json, saveAs ? null : loadedFileName)) return;
+            }
+        } else {
+            if (!downloadJSON(json, saveAs ? null : loadedFileName)) return;
+        }
+        dirty = false;
+        saveBtn.disabled = true;
+        updateStats();
+        try { await saveFileToIndexedDB(new Blob([json], { type: 'application/json' })); } catch (e) { /* keep autoload best-effort */ }
+    }
+
+    function downloadJSON(json, fixedName) {
+        let name = fixedName;
+        if (!name) {
+            name = prompt('Save as filename:', loadedFileName);
+            if (!name) return false;
+            if (!name.toLowerCase().endsWith('.json')) name += '.json';
+        }
+        loadedFileName = name;
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return true;
+    }
+
+    saveBtn.addEventListener('click', () => saveFile(false));
+    saveAsBtn.addEventListener('click', () => saveFile(true));
+    window.addEventListener('beforeunload', (e) => {
+        if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
     function currentConversationIndex() {
         const conv = filteredConversations.find(c => c.id === selectedConvId);
         return conv ? conv.originalIndex + 1 : null;
@@ -1116,7 +1426,9 @@
     function updateStats() {
         const total = rawConversations.length;
         const shown = filteredConversations.length;
-        statsDiv.innerText = total === 0 ? "No data" : (shown === total ? `${total} conversations` : `${shown} / ${total} conversations`);
+        let base = total === 0 ? "No data" : (shown === total ? `${total} conversations` : `${shown} / ${total} conversations`);
+        if (dirty) base += ' <span class="modified-flag">● modified</span>';
+        statsDiv.innerHTML = base;
     }
 
     function computeVisibleRange() {
@@ -1152,7 +1464,19 @@
                     <div class="conv-preview">${escapeHtml(conv.preview)}</div>
                     <div class="conv-date">${escapeHtml(conv.date || 'No date')}</div>
                 </div>
+                <div class="conv-actions">
+                    <button class="conv-action-btn" data-rename="${conv.id}" title="Rename conversation">✏️</button>
+                    <button class="conv-action-btn danger" data-delconv="${conv.id}" title="Delete conversation">🗑</button>
+                </div>
             `;
+            div.querySelector('[data-rename]').addEventListener('click', (e) => {
+                e.stopPropagation();
+                renameConversation(conv.id);
+            });
+            div.querySelector('[data-delconv]').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteConversation(conv.id);
+            });
             div.addEventListener('click', () => selectConversation(conv.id));
             fragment.appendChild(div);
         }
@@ -1221,6 +1545,16 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
+                    loadedRoot = parsed;
+                    loadedListKey = null;
+                    if (!Array.isArray(parsed)) {
+                        if (parsed.conversations && Array.isArray(parsed.conversations)) loadedListKey = 'conversations';
+                        else if (parsed.chats && Array.isArray(parsed.chats)) loadedListKey = 'chats';
+                    }
+                    saveFileHandle = null;
+                    dirty = false;
+                    saveBtn.disabled = true;
+                    saveAsBtn.disabled = false;
                     rawConversations = prepareConversations(parsed);
                     reversedConversations = createReversedList(rawConversations);
                     filteredConversations = [...reversedConversations];
@@ -1259,6 +1593,7 @@
 
     async function loadConversationsFile(file) {
         if (!file) return;
+        if (file.name) loadedFileName = file.name;
         try {
             await saveFileToIndexedDB(file);
         } catch (err) { console.warn('Failed to save to IndexedDB:', err); }
@@ -1303,6 +1638,8 @@
         else if (e.key === 'End' && !bottomMsgBtn.disabled) { e.preventDefault(); goToBottomMessage(); }
         else if (e.ctrlKey && e.key === 'c' && !copyMsgBtn.disabled) { e.preventDefault(); copyCurrentMessage(); }
         else if (e.ctrlKey && e.key === 'a' && !copyAllBtn.disabled) { e.preventDefault(); copyAllConversation(); }
+        else if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's') && !saveAsBtn.disabled) { e.preventDefault(); saveFile(true); }
+        else if (e.ctrlKey && (e.key === 's' || e.key === 'S') && !saveBtn.disabled) { e.preventDefault(); saveFile(false); }
     });
 
     statsDiv.innerText = "Loading...";

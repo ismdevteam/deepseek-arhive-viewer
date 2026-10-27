@@ -1,6 +1,6 @@
 # DeepSeek Archive Viewer
 
-A powerful, self-contained HTML/JS viewer for DeepSeek chat exports (`conversations.json`).  
+A powerful, self-contained HTML/JS viewer **and editor** for DeepSeek chat exports (`conversations.json`).  
 Works with **100+ MB files** – virtual scrolling, full‑text search, conversation/message navigation, copy to clipboard, and auto‑load of previously used file.
 
 **🔗 Live Demo:** [ismdevteam.github.io/deepseek-arhive-viewer/](https://ismdevteam.github.io/deepseek-arhive-viewer/)
@@ -9,6 +9,10 @@ Works with **100+ MB files** – virtual scrolling, full‑text search, conversa
 
 ## Features
 
+- ✏️ **Edit messages** – hover any message → **✏️ Edit**, modify the text, **✓ Apply**
+- 🗑 **Delete messages** – hover any message → **🗑 Delete** (with confirmation)
+- 📝 **Rename / delete conversations** – hover a conversation in the left list → ✏️ / 🗑
+- 💾 **Save / Save As** – write changes back to the same file or a new one (Ctrl+S / Ctrl+Shift+S); uses the File System Access API where available, otherwise downloads the file. A **● modified** badge and a leave‑page warning protect unsaved edits
 - 📂 **Load massive JSON exports** – handles 100+ MB files smoothly
 - 🔍 **Two‑level search** – global search across all conversations + case‑sensitive in‑chat search (min 3 letters, 1s debounce)
 - 🧭 **Message navigation** – Top / Prev / Next / Bottom buttons + arrow keys (↑ ↓) + Home / End
@@ -99,6 +103,8 @@ Higher value = message appears lower on screen.
 | Last message | End |
 | Copy current message | Ctrl+C (Cmd+C on Mac) |
 | Copy entire conversation | Ctrl+A (Cmd+A on Mac) |
+| Save changes to file | Ctrl+S |
+| Save changes to a new file | Ctrl+Shift+S |
 
 *Shortcuts work when no input field is focused.*
 
